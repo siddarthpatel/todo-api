@@ -19,13 +19,13 @@ var todos = [{
 ];
 
 function fetchTodo(todoId){
-	var todo;
-	for (var i=0; i<todos.length; i++){
-		if(todos[i].id === todoId){
-			todo = todos[i];
-			return todo;
+	var matchedTodo;
+	todos.forEach(function(todo){
+		if(todo.id === todoId){
+			matchedTodo = todo;
+			return matchedTodo;
 		}
-	}
+	});
 }
 
 app.get('/', function(req, res){
