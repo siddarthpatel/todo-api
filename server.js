@@ -19,16 +19,22 @@ function addTodo(todo){
 	return todo;
 }
 
+function deleteTodo(todoId){
+	var todoToDelete = _.findWhere(todos, {id: todoId});
+	todos = _.without(todos, todoToDelete)
+	return todoToDelete;
+}
+
 app.get('/', function(req, res){
 	res.send('Todo API root');
 });
 
-//GET/todos
+//GET /todos
 app.get('/todos', function(req, res){
 	res.json(todos);
 });
 
-//GET/todos/id
+//GET /todos/id
 app.get('/todos/:id', function(req, res){
 	var todo = fetchTodo(parseInt(req.params.id, 10));
 
@@ -38,7 +44,7 @@ app.get('/todos/:id', function(req, res){
 		res.status(404).send();
 });
 
-//POST/todos
+//POST /todos
 app.post('/todos', function(req, res){
 	var body = _.pick(req.body, 'description', 'completed'); // parsed by bodyParse as JSON to read data in server, and then retured as an Object in req.body
 	
@@ -48,6 +54,20 @@ app.post('/todos', function(req, res){
 	body.description = body.description.trim();
 	var todo = addTodo(body)
 	res.json(body);
+});
+
+//DELETE /todos/:id
+app.delete('/todos/:id', function(req, res){
+	var todoId = parseInt(req.params.id, 10);
+	var todo = fetchTodo(todoId);
+
+	if (todo){
+		var deletedTodo = deleteTodo(todoId);
+		res.json(deletedTodo);
+		res.status(200).send();	
+	} 
+	else
+		res.status(404).send();
 });
 
 app.listen(PORT, function(){
