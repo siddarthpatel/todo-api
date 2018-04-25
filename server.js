@@ -65,17 +65,17 @@ app.get('/todos/:id', function(req, res){
 app.post('/todos', function(req, res){
 	var body = _.pick(req.body, 'description', 'completed'); // parsed by bodyParser as JSON to read data in server, and then retured as an Object in req.body
 	
-	db.todo.create(body).then(function(todo){
-		res.json(todo.toJSON());
-	}).catch(function (e){
-		res.status(400).json(e);
-	});
-	// if (!_.isBoolean(body.completed) || !_.isString(body.description) || body.description.trim().length == 0)
-	// 	return res.status(404).send();
+	// db.todo.create(body).then(function(todo){
+	// 	res.json(todo.toJSON());
+	// }).catch(function (e){
+	// 	res.status(400).json(e);
+	// });
+	if (!_.isBoolean(body.completed) || !_.isString(body.description) || body.description.trim().length == 0)
+		return res.status(404).send();
 
-	// body.description = body.description.trim();
-	// var todo = addTodo(body)
-	// res.json(todo);
+	body.description = body.description.trim();
+	var todo = addTodo(body)
+	res.json(todo);
 });
 
 //DELETE /todos/:id
@@ -114,9 +114,9 @@ app.put('/todos/:id', function(req, res){
 	res.json(matchedTodo);
 });
 
-db.sequelize.sync({force: true}).then(function(){
+// db.sequelize.sync({force: true}).then(function(){
 	app.listen(PORT, function(){
 		console.log('express listening on port '+ PORT);
 	});
-});
+// });
 
