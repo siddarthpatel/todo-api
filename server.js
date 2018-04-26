@@ -83,15 +83,21 @@ app.post('/todos', function(req, res){
 //DELETE /todos/:id
 app.delete('/todos/:id', function(req, res){
 	var todoId = parseInt(req.params.id, 10);
-	var todo = fetchTodo(todoId);
 
-	if (todo){
-		var deletedTodo = deleteTodo(todoId);
-		res.json(deletedTodo);
-		res.status(200).send();	
-	} 
-	else
-		res.status(404).send();
+	db.todo.destroy({
+	   	where: {
+	      id: todoId //this will be your id that you want to delete
+	   	}
+	}).then(function(rowsDeleted){ // rowDeleted will return number of rows deleted
+		if (rowsDeleted === 0){
+			res.status(400).json({ error: 'no todo item'});
+		} else {
+			res.status(204).send();
+		}
+	}, function(){
+	    res.status(500).send(); 
+	});
+
 });
 
 //PUT /todos/:id
