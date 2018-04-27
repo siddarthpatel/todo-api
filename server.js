@@ -7,26 +7,6 @@ app.use(bodyParser.json());
 
 var _ = require('underscore');
 var db = require('./db.js');
-var nextId = 1;
-var todos = [];
-
-function fetchTodo(todoId){
-	var matchedTodo = _.findWhere(todos, {id: todoId});
-	return matchedTodo;
-}
-
-function addTodo(todo){
-	todo.id = nextId;
-	todos.push(todo);
-	nextId = nextId + 1;
-	return todo;
-}
-
-function deleteTodo(todoId){
-	var todoToDelete = _.findWhere(todos, {id: todoId});
-	todos = _.without(todos, todoToDelete)
-	return todoToDelete;
-}
 
 app.get('/', function(req, res){
 	res.send('Todo API root');
@@ -102,24 +82,32 @@ app.delete('/todos/:id', function(req, res){
 
 //PUT /todos/:id
 app.put('/todos/:id', function(req, res){
-	var matchedTodo = fetchTodo(parseInt(req.params.id, 10))
+	var todoId = parseInt(req.params.id, 10);
 	var body = _.pick(req.body, 'description', 'completed'); // parsed by bodyParse as JSON to read data in server, and then retured as an Object in req.body
-	var validAttributes = {};
+	var attributes = {};
 
-	if (body.hasOwnProperty('completed') && _.isBoolean(body.completed)){
-		validAttributes.completed = body.completed;
-	} else if (body.hasOwnProperty('completed'))
-		return res.status(400).send();
-	
-
-	if (body.hasOwnProperty('description') && _.isString(body.description) && body.description.trim().length > 0){
-		validAttributes.description = body.description;
-	} else if (body.hasOwnProperty('description')){
-		return res.status(400).send();
+	if (body.hasOwnProperty('completed')){
+		attributes.completed = body.completed;
 	}
+	
+	if (body.hasOwnProperty('description')){
+		attributes.description = body.description;
+	} 
 
-	_.extend(matchedTodo, validAttributes)
-	res.json(matchedTodo);
+	db.todo.findById(todoId).then(function(todo){
+			if(todo){
+				todo.update(attributes).then(function (todo){
+					res.json(todo.toJSON());
+				}, function(e){
+						res.status(400).json(e);
+				});
+			} else {
+				res.status(404).send();
+			}
+		}, function(){
+			res.status(500).send();
+	});
+
 });
 
 db.sequelize.sync({force: true}).then(function(){
