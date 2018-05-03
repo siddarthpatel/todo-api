@@ -53,7 +53,7 @@ module.exports = function(sequelize, DataTypes){
 								}
 							}).then(function (user) {
 								if (!user || !bcrypt.compareSync(body.password, user.get('password_hash')))
-									reject();
+									return reject();
 								resolve(user);
 							}, function(e){
 								reject();
