@@ -16,8 +16,9 @@ app.get('/', function(req, res){
 
 //GET /todos?completed=true&q=work
 app.get('/todos', middleware.requiredAuthentication, function(req, res){
+	var userId = req.user.get('id');
 	var queryParams = req.query;
-	var where = {};
+	var where = {userId:userId};
 	var filteredTodos = [];
 
 	if(queryParams.hasOwnProperty('completed') && queryParams.completed === 'true')
@@ -37,9 +38,9 @@ app.get('/todos', middleware.requiredAuthentication, function(req, res){
 
 //GET /todos/id
 app.get('/todos/:id', middleware.requiredAuthentication, function(req, res){
-	
-	var id = parseInt(req.params.id, 10)
-	db.todo.findById(id).then(function (todo){
+	var userId = req.user.get('id');
+	var todoId = parseInt(req.params.id, 10)
+	db.todo.findOne({where: {id:todoId, userId:userId}}).then(function (todo){
 		if (todo){
 			res.json(todo.toJSON());	
 		} else {
@@ -70,10 +71,12 @@ app.post('/todos', middleware.requiredAuthentication, function(req, res){
 //DELETE /todos/:id
 app.delete('/todos/:id', middleware.requiredAuthentication, function(req, res){
 	var todoId = parseInt(req.params.id, 10);
+	var userId = req.user.get('id');
 
 	db.todo.destroy({
 	   	where: {
-	      id: todoId //this will be your id that you want to delete
+	      id: todoId,
+	      userId:userId //this will be your id that you want to delete
 	   	}
 	}).then(function(rowsDeleted){ // rowDeleted will return number of rows deleted
 		if (rowsDeleted === 0){
@@ -89,6 +92,7 @@ app.delete('/todos/:id', middleware.requiredAuthentication, function(req, res){
 
 //PUT /todos/:id
 app.put('/todos/:id', middleware.requiredAuthentication, function(req, res){
+	var userId = req.user.get('id');
 	var todoId = parseInt(req.params.id, 10);
 	var body = _.pick(req.body, 'description', 'completed'); // parsed by bodyParse as JSON to read data in server, and then retured as an Object in req.body
 	var attributes = {};
@@ -101,7 +105,7 @@ app.put('/todos/:id', middleware.requiredAuthentication, function(req, res){
 		attributes.description = body.description;
 	} 
 
-	db.todo.findById(todoId).then(function(todo){
+	db.todo.findOne({where:{id:todoId, userId:userId}}).then(function(todo){
 			if(todo){
 				todo.update(attributes).then(function (todo){
 					res.json(todo.toJSON());
